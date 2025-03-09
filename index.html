@@ -57,14 +57,47 @@
                     </div>
                 </div>
 
+                <!-- Bouton pour détecter automatiquement si le PDF est scanné -->
+                <div x-show="fileSelected && !isPdfTypeDetected" class="flex justify-center">
+                    <button type="button" @click="detectPdfType" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                        <svg x-show="isDetecting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-show="!isDetecting">Analyser le type de PDF</span>
+                        <span x-show="isDetecting">Analyse en cours...</span>
+                    </button>
+                </div>
+
+                <!-- Affichage des résultats de la détection du type de PDF -->
+                <div x-show="isPdfTypeDetected" class="p-4 rounded-lg" :class="isPdfScanned ? 'bg-yellow-50 border border-yellow-300' : 'bg-green-50 border border-green-300'">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg x-show="!isPdfScanned" class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            <svg x-show="isPdfScanned" class="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p x-show="!isPdfScanned" class="text-sm text-green-700">PDF avec texte sélectionnable détecté. L'extraction standard est recommandée.</p>
+                            <p x-show="isPdfScanned" class="text-sm text-yellow-700">PDF scanné détecté. L'extraction OCR est recommandée et activée automatiquement.</p>
+                            <p class="text-xs text-gray-500 mt-1" x-text="'Confiance de la détection: ' + (pdfTypeDetectionConfidence * 100).toFixed(0) + '%'"></p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Action à effectuer</label>
                         <select x-model="selectedAction" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="extract-tables">Extraire les tableaux</option>
+                            <option value="extract-tables-ocr">Extraire les tableaux (OCR)</option>
                             <option value="analyze-table">Analyser un tableau</option>
                             <option value="convert-table">Convertir un tableau</option>
                             <option value="search-tables">Rechercher dans les tableaux</option>
+                            <option value="export-all-tables">Exporter tous les tableaux</option>
                         </select>
                     </div>
 
@@ -74,7 +107,7 @@
                     </div>
                 </div>
 
-                <!-- Options specifiques -->
+                <!-- Options spécifiques à l'extraction de tableaux standard -->
                 <div x-show="selectedAction === 'extract-tables'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Méthode d'extraction</label>
@@ -83,6 +116,7 @@
                             <option value="tabula">Tabula</option>
                             <option value="camelot">Camelot</option>
                             <option value="pdfplumber">PDFPlumber</option>
+                            <option value="ocr">OCR (PDF scanné)</option>
                         </select>
                     </div>
                     <div>
@@ -100,8 +134,56 @@
                             <span class="ml-2 text-gray-700">Inclure les images des tableaux</span>
                         </label>
                     </div>
+
+                    <!-- Option OCR pour tous les modes d'extraction -->
+                    <div class="md:col-span-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
+                        </label>
+                    </div>
                 </div>
 
+                <!-- Options spécifiques à l'extraction OCR -->
+                <div x-show="selectedAction === 'extract-tables-ocr' || (selectedAction === 'extract-tables' && (ocrEnabled || extractionMethod === 'ocr'))" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div class="md:col-span-2">
+                        <h3 class="font-medium text-yellow-800 mb-2">Options OCR pour PDF scannés</h3>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Langues OCR</label>
+                        <select x-model="ocrLanguage" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="fra">Français</option>
+                            <option value="eng">Anglais</option>
+                            <option value="fra+eng">Français + Anglais</option>
+                            <option value="deu">Allemand</option>
+                            <option value="spa">Espagnol</option>
+                            <option value="ita">Italien</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Format de sortie</label>
+                        <select x-model="outputFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="json">JSON</option>
+                            <option value="csv">CSV</option>
+                            <option value="html">HTML</option>
+                            <option value="excel">Excel</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="ocrEnhanceImage" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 text-gray-700">Améliorer l'image (contraste)</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="ocrDeskew" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 text-gray-700">Corriger l'inclinaison</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Options spécifiques à l'analyse de tableau -->
                 <div x-show="selectedAction === 'analyze-table'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Numéro de page</label>
@@ -111,8 +193,16 @@
                         <label class="block text-gray-700 font-medium mb-2">Index du tableau</label>
                         <input type="number" x-model="tableIndex" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
+                    <!-- Option OCR pour l'analyse de tableau -->
+                    <div class="md:col-span-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
+                        </label>
+                    </div>
                 </div>
 
+                <!-- Options spécifiques à la conversion de tableau -->
                 <div x-show="selectedAction === 'convert-table'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Numéro de page</label>
@@ -131,8 +221,16 @@
                             <option value="excel">Excel</option>
                         </select>
                     </div>
+                    <!-- Option OCR pour la conversion de tableau -->
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
+                        </label>
+                    </div>
                 </div>
 
+                <!-- Options spécifiques à la recherche dans les tableaux -->
                 <div x-show="selectedAction === 'search-tables'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
                         <label class="block text-gray-700 font-medium mb-2">Texte à rechercher</label>
@@ -142,6 +240,32 @@
                         <label class="flex items-center">
                             <input type="checkbox" x-model="caseSensitive" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                             <span class="ml-2 text-gray-700">Sensible à la casse</span>
+                        </label>
+                    </div>
+                    <!-- Option OCR pour la recherche dans les tableaux -->
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Options spécifiques à l'export de tous les tableaux -->
+                <div x-show="selectedAction === 'export-all-tables'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Format de sortie</label>
+                        <select x-model="outputFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="excel">Excel (un fichier avec plusieurs feuilles)</option>
+                            <option value="csv">CSV (archive zip)</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                    <!-- Option OCR pour l'export de tous les tableaux -->
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
                         </label>
                     </div>
                 </div>
@@ -171,6 +295,20 @@
                 Résultats
             </h2>
 
+            <!-- Indication si OCR a été utilisé -->
+            <div x-show="results.ocr_used" class="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">L'OCR a été utilisé pour l'extraction des tableaux de ce PDF scanné.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Extrait des infos de base -->
             <div class="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-gray-50 p-4 rounded-lg">
@@ -191,8 +329,23 @@
                 </div>
             </div>
 
-                            <!-- Tableaux de résultats -->
-            <div x-show="selectedAction === 'extract-tables' && results.tables" class="overflow-x-auto">
+            <!-- Méthode d'extraction utilisée -->
+            <div x-show="results.extraction_method_used" class="mb-4 flex items-center p-3 bg-gray-50 rounded-lg">
+                <div class="mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Méthode d'extraction utilisée :
+                        <span class="font-semibold" x-text="results.extraction_method_used"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tableaux de résultats -->
+            <div x-show="(selectedAction === 'extract-tables' || selectedAction === 'extract-tables-ocr') && results.tables" class="overflow-x-auto">
                 <div class="p-4 border rounded-lg mb-4 bg-indigo-50" x-show="results.tables.length === 0">
                     Aucun tableau n'a été trouvé dans le document.
                 </div>
@@ -355,7 +508,7 @@
             </div>
 
             <!-- Images des tableaux -->
-            <div x-show="selectedAction === 'extract-tables' && results.images && results.images.length > 0" class="mt-8">
+            <div x-show="(selectedAction === 'extract-tables' || selectedAction === 'extract-tables-ocr') && results.images && results.images.length > 0" class="mt-8">
                 <h3 class="text-lg font-semibold mb-4">Images des tableaux</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <template x-for="(image, imageIndex) in results.images" :key="imageIndex">
@@ -419,8 +572,12 @@
                 fileSelected: false,
                 dragOver: false,
                 isLoading: false,
+                isDetecting: false,
                 results: null,
                 error: null,
+                isPdfTypeDetected: false,
+                isPdfScanned: false,
+                pdfTypeDetectionConfidence: 0,
                 
                 // Options de traitement
                 selectedAction: 'extract-tables',
@@ -432,6 +589,12 @@
                 tableIndex: 0,
                 searchQuery: '',
                 caseSensitive: false,
+
+                // Options OCR
+                ocrEnabled: false,
+                ocrLanguage: 'fra+eng',
+                ocrEnhanceImage: true,
+                ocrDeskew: true,
                 
                 // Configuration de l'API
                 apiEndpoint: 'http://192.168.0.18:8000/api/pdf',
@@ -443,6 +606,9 @@
                         this.selectedFile = file;
                         this.fileSelected = true;
                         this.error = null;
+                        // Réinitialiser la détection du type de PDF
+                        this.isPdfTypeDetected = false;
+                        this.isPdfScanned = false;
                     } else {
                         this.error = "Veuillez sélectionner un fichier PDF valide.";
                     }
@@ -455,6 +621,9 @@
                         this.selectedFile = file;
                         this.fileSelected = true;
                         this.error = null;
+                        // Réinitialiser la détection du type de PDF
+                        this.isPdfTypeDetected = false;
+                        this.isPdfScanned = false;
                     } else {
                         this.error = "Veuillez sélectionner un fichier PDF valide.";
                     }
@@ -463,6 +632,8 @@
                 resetFile() {
                     this.selectedFile = null;
                     this.fileSelected = false;
+                    this.isPdfTypeDetected = false;
+                    this.isPdfScanned = false;
                 },
                 
                 resetForm() {
@@ -476,8 +647,14 @@
                     this.tableIndex = 0;
                     this.searchQuery = '';
                     this.caseSensitive = false;
+                    this.ocrEnabled = false;
+                    this.ocrLanguage = 'fra+eng';
+                    this.ocrEnhanceImage = true;
+                    this.ocrDeskew = true;
                     this.results = null;
                     this.error = null;
+                    this.isPdfTypeDetected = false;
+                    this.isPdfScanned = false;
                 },
                 
                 formatFileSize(bytes) {
@@ -491,11 +668,54 @@
                 getEndpoint() {
                     const endpoints = {
                         'extract-tables': `${this.apiEndpoint}/extract-tables`,
+                        'extract-tables-ocr': `${this.apiEndpoint}/extract-tables-ocr`,
                         'analyze-table': `${this.apiEndpoint}/analyze-table`,
                         'convert-table': `${this.apiEndpoint}/convert-table`,
-                        'search-tables': `${this.apiEndpoint}/search-tables`
+                        'search-tables': `${this.apiEndpoint}/search-tables`,
+                        'export-all-tables': `${this.apiEndpoint}/export-all-tables`
                     };
                     return endpoints[this.selectedAction];
+                },
+                
+                async detectPdfType() {
+                    if (!this.fileSelected) return;
+                    
+                    this.error = null;
+                    this.isDetecting = true;
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', this.selectedFile);
+                        
+                        const response = await fetch(`${this.apiEndpoint}/detect-pdf-type`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.detail || 'Une erreur s\'est produite');
+                        }
+                        
+                        const result = await response.json();
+                        this.isPdfScanned = result.is_scanned;
+                        this.pdfTypeDetectionConfidence = result.confidence;
+                        this.isPdfTypeDetected = true;
+                        
+                        // Activer automatiquement l'OCR si PDF scanné
+                        if (this.isPdfScanned) {
+                            this.ocrEnabled = true;
+                            if (this.selectedAction === 'extract-tables') {
+                                this.extractionMethod = 'ocr';
+                            }
+                        }
+                        
+                    } catch (error) {
+                        this.error = error.message || 'Une erreur s\'est produite lors de la détection du type de PDF';
+                        console.error('Erreur:', error);
+                    } finally {
+                        this.isDetecting = false;
+                    }
                 },
                 
                 async submitForm() {
@@ -516,23 +736,48 @@
                                 formData.append('extraction_method', this.extractionMethod);
                                 formData.append('output_format', this.outputFormat);
                                 formData.append('include_images', this.includeImages);
+                                formData.append('ocr_enabled', this.ocrEnabled);
+                                
+                                // Paramètres OCR si activé
+                                if (this.ocrEnabled || this.extractionMethod === 'ocr') {
+                                    formData.append('ocr_language', this.ocrLanguage);
+                                    formData.append('ocr_enhance_image', this.ocrEnhanceImage);
+                                    formData.append('ocr_deskew', this.ocrDeskew);
+                                }
+                                break;
+                                
+                            case 'extract-tables-ocr':
+                                formData.append('pages', this.pages);
+                                formData.append('languages', this.ocrLanguage);
+                                formData.append('enhance_image', this.ocrEnhanceImage);
+                                formData.append('deskew', this.ocrDeskew);
+                                formData.append('output_format', this.outputFormat);
                                 break;
                                 
                             case 'analyze-table':
                                 formData.append('page', this.pageNumber);
                                 formData.append('table_index', this.tableIndex);
+                                formData.append('ocr_enabled', this.ocrEnabled);
                                 break;
                                 
                             case 'convert-table':
                                 formData.append('page', this.pageNumber);
                                 formData.append('table_index', this.tableIndex);
                                 formData.append('output_format', this.outputFormat);
+                                formData.append('ocr_enabled', this.ocrEnabled);
                                 break;
                                 
                             case 'search-tables':
                                 formData.append('query', this.searchQuery);
                                 formData.append('pages', this.pages);
                                 formData.append('case_sensitive', this.caseSensitive);
+                                formData.append('ocr_enabled', this.ocrEnabled);
+                                break;
+                                
+                            case 'export-all-tables':
+                                formData.append('pages', this.pages);
+                                formData.append('output_format', this.outputFormat);
+                                formData.append('ocr_enabled', this.ocrEnabled);
                                 break;
                         }
                         
@@ -546,7 +791,32 @@
                             throw new Error(errorData.detail || 'Une erreur s\'est produite');
                         }
                         
-                        this.results = await response.json();
+                        // Traitement spécial pour les téléchargements directs (export-all-tables)
+                        if (this.selectedAction === 'export-all-tables' && this.outputFormat !== 'json') {
+                            const blob = await response.blob();
+                            const fileName = this.selectedFile.name.replace('.pdf', '') + '_tables.' + 
+                                (this.outputFormat === 'excel' ? 'xlsx' : (this.outputFormat === 'csv' ? 'zip' : this.outputFormat));
+                            
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            
+                            this.results = {
+                                filename: this.selectedFile.name,
+                                file_size: this.selectedFile.size,
+                                processing_time: 0,
+                                tables_count: 0,
+                                message: `Tableaux exportés avec succès au format ${this.outputFormat}`,
+                                ocr_used: this.ocrEnabled
+                            };
+                        } else {
+                            this.results = await response.json();
+                        }
                         
                         // Scroll to results
                         setTimeout(() => {
