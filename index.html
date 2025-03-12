@@ -57,85 +57,27 @@
                     </div>
                 </div>
 
-                <!-- Bouton pour détecter automatiquement si le PDF est scanné -->
-                <div x-show="fileSelected && !isPdfTypeDetected" class="flex justify-center">
-                    <button type="button" @click="detectPdfType" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
-                        <svg x-show="isDetecting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span x-show="!isDetecting">Analyser le type de PDF</span>
-                        <span x-show="isDetecting">Analyse en cours...</span>
-                    </button>
-                </div>
+                <!-- Options d'extraction -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Type de document</label>
+                        <select x-model="documentType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="generic">Générique</option>
+                            <option value="invoice">Facture</option>
+                            <option value="receipt">Reçu</option>
+                        </select>
+                    </div>
 
-                <!-- Affichage des résultats de la détection du type de PDF -->
-                <div x-show="isPdfTypeDetected" class="p-4 rounded-lg" :class="isPdfScanned ? 'bg-yellow-50 border border-yellow-300' : 'bg-green-50 border border-green-300'">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0">
-                            <svg x-show="!isPdfScanned" class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                            <svg x-show="isPdfScanned" class="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <p x-show="!isPdfScanned" class="text-sm text-green-700">PDF avec texte sélectionnable détecté. L'extraction standard est recommandée.</p>
-                            <p x-show="isPdfScanned" class="text-sm text-yellow-700">PDF scanné détecté. L'extraction OCR est recommandée et activée automatiquement.</p>
-                            <p class="text-xs text-gray-500 mt-1" x-text="'Confiance de la détection: ' + (pdfTypeDetectionConfidence * 100).toFixed(0) + '%'"></p>
-                        </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Pages</label>
+                        <input type="text" x-model="pages" placeholder="all, 1, 1-3, 1,3,5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
-
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div>
-						<label class="block text-gray-700 font-medium mb-2">Action à effectuer</label>
-						<select x-model="selectedAction" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-							<option value="extract-tables">Extraire les tableaux</option>
-							<option value="extract-tables-ocr">Extraire les tableaux (OCR)</option>
-							<option value="analyze-table">Analyser un tableau</option>
-							<option value="convert-table">Convertir un tableau</option>
-							<option value="search-tables">Rechercher dans les tableaux</option>
-							<option value="export-all-tables">Exporter tous les tableaux</option>
-						</select>
-					</div>
-
-					<div>
-						<label class="block text-gray-700 font-medium mb-2">Pages</label>
-						<input type="text" x-model="pages" placeholder="all, 1, 1-3, 1,3,5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-					</div>
-				</div>
-				
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-					<div>
-						<label class="block text-gray-700 font-medium mb-2">Type de document</label>
-						<select x-model="documentType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-							<option value="generic">Générique</option>
-							<option value="invoice">Facture</option>
-							<option value="receipt">Reçu</option>
-						</select>
-					</div>
-					
-					<div x-show="documentType === 'invoice'" class="bg-blue-50 p-3 rounded border border-blue-200">
-						<div class="flex">
-							<div class="flex-shrink-0">
-								<svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-									<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-								</svg>
-							</div>
-							<div class="ml-3">
-								<p class="text-sm text-blue-700">Le mode facture applique un post-traitement spécifique pour extraire informations, lignes et totaux.</p>
-							</div>
-						</div>
-					</div>
-				</div>
-
-                <!-- Options spécifiques à l'extraction de tableaux standard -->
-                <div x-show="selectedAction === 'extract-tables'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-gray-700 font-medium mb-2">Méthode d'extraction</label>
-                        <select x-model="extractionMethod" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <label class="block text-gray-700 font-medium mb-2">Stratégie d'extraction</label>
+                        <select x-model="strategy" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="auto">Auto</option>
                             <option value="tabula">Tabula</option>
                             <option value="camelot">Camelot</option>
@@ -152,27 +94,26 @@
                             <option value="excel">Excel</option>
                         </select>
                     </div>
-                    <div class="md:col-span-2">
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="includeImages" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                            <span class="ml-2 text-gray-700">Inclure les images des tableaux</span>
-                        </label>
-                    </div>
+                </div>
 
-                    <!-- Option OCR pour tous les modes d'extraction -->
-                    <div class="md:col-span-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Options OCR -->
+                    <div>
                         <label class="flex items-center">
                             <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                             <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
                         </label>
                     </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="includeImages" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 text-gray-700">Inclure les images des tableaux</span>
+                        </label>
+                    </div>
                 </div>
 
-                <!-- Options spécifiques à l'extraction OCR -->
-                <div x-show="selectedAction === 'extract-tables-ocr' || (selectedAction === 'extract-tables' && (ocrEnabled || extractionMethod === 'ocr'))" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div class="md:col-span-2">
-                        <h3 class="font-medium text-yellow-800 mb-2">Options OCR pour PDF scannés</h3>
-                    </div>
+                <!-- Options OCR supplémentaires -->
+                <div x-show="ocrEnabled" class="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Langues OCR</label>
                         <select x-model="ocrLanguage" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
@@ -182,15 +123,6 @@
                             <option value="deu">Allemand</option>
                             <option value="spa">Espagnol</option>
                             <option value="ita">Italien</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Format de sortie</label>
-                        <select x-model="outputFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="json">JSON</option>
-                            <option value="csv">CSV</option>
-                            <option value="html">HTML</option>
-                            <option value="excel">Excel</option>
                         </select>
                     </div>
                     <div>
@@ -207,90 +139,28 @@
                     </div>
                 </div>
 
-                <!-- Options spécifiques à l'analyse de tableau -->
-                <div x-show="selectedAction === 'analyze-table'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Numéro de page</label>
-                        <input type="number" x-model="pageNumber" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <!-- Options avancées -->
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 class="font-medium text-gray-700 mb-2">Options avancées</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="analyze" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <span class="ml-2 text-gray-700">Analyser les tableaux</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="backgroundProcessing" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <span class="ml-2 text-gray-700">Traitement en arrière-plan (fichiers volumineux)</span>
+                            </label>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Index du tableau</label>
-                        <input type="number" x-model="tableIndex" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <!-- Option OCR pour l'analyse de tableau -->
-                    <div class="md:col-span-2">
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Options spécifiques à la conversion de tableau -->
-                <div x-show="selectedAction === 'convert-table'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Numéro de page</label>
-                        <input type="number" x-model="pageNumber" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Index du tableau</label>
-                        <input type="number" x-model="tableIndex" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Format de sortie</label>
-                        <select x-model="outputFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="json">JSON</option>
-                            <option value="csv">CSV</option>
-                            <option value="html">HTML</option>
-                            <option value="excel">Excel</option>
-                        </select>
-                    </div>
-                    <!-- Option OCR pour la conversion de tableau -->
-                    <div>
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Options spécifiques à la recherche dans les tableaux -->
-                <div x-show="selectedAction === 'search-tables'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2">
-                        <label class="block text-gray-700 font-medium mb-2">Texte à rechercher</label>
+                    
+                    <!-- Recherche dans les tableaux -->
+                    <div class="mt-4" x-show="analyze">
+                        <label class="block text-gray-700 font-medium mb-2">Rechercher dans les tableaux</label>
                         <input type="text" x-model="searchQuery" placeholder="Entrez votre recherche..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="caseSensitive" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                            <span class="ml-2 text-gray-700">Sensible à la casse</span>
-                        </label>
-                    </div>
-                    <!-- Option OCR pour la recherche dans les tableaux -->
-                    <div>
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Options spécifiques à l'export de tous les tableaux -->
-                <div x-show="selectedAction === 'export-all-tables'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Format de sortie</label>
-                        <select x-model="outputFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="excel">Excel (un fichier avec plusieurs feuilles)</option>
-                            <option value="csv">CSV (archive zip)</option>
-                            <option value="json">JSON</option>
-                        </select>
-                    </div>
-                    <!-- Option OCR pour l'export de tous les tableaux -->
-                    <div>
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="ocrEnabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                            <span class="ml-2 text-gray-700">Activer l'OCR pour les PDF scannés</span>
-                        </label>
                     </div>
                 </div>
 
@@ -303,11 +173,25 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span x-show="!isLoading">Exécuter</span>
+                        <span x-show="!isLoading">Extraire les tableaux</span>
                         <span x-show="isLoading">Traitement en cours...</span>
                     </button>
                 </div>
             </form>
+        </div>
+
+        <!-- Message d'erreur -->
+        <div x-show="error" class="bg-red-50 border-l-4 border-red-500 p-4 mb-8">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700" x-text="error"></p>
+                </div>
+            </div>
         </div>
 
         <!-- Résultats -->
@@ -369,11 +253,7 @@
             </div>
 
             <!-- Tableaux de résultats -->
-            <div x-show="(selectedAction === 'extract-tables' || selectedAction === 'extract-tables-ocr') && results.tables" class="overflow-x-auto">
-                <div class="p-4 border rounded-lg mb-4 bg-indigo-50" x-show="results.tables.length === 0">
-                    Aucun tableau n'a été trouvé dans le document.
-                </div>
-                
+            <div x-show="results.tables && results.tables.length > 0" class="overflow-x-auto">
                 <template x-for="(table, tableIndex) in results.tables" :key="tableIndex">
                     <div class="mb-6 border rounded-lg overflow-hidden">
                         <div class="flex justify-between items-center p-4 bg-gray-50 border-b">
@@ -395,111 +275,88 @@
                             <div x-show="outputFormat === 'html'" x-html="table.data"></div>
                             
                             <!-- Affichage pour JSON et autres formats -->
-                            <pre x-show="outputFormat !== 'html'" class="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded" x-text="JSON.stringify(table.data, null, 2)"></pre>
+                            <pre x-show="outputFormat !== 'html'" class="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded" x-text="typeof table.data === 'object' ? JSON.stringify(table.data, null, 2) : table.data"></pre>
                         </div>
                     </div>
                 </template>
             </div>
 
+            <!-- Aucun tableau trouvé -->
+            <div x-show="results.tables && results.tables.length === 0" class="p-4 border rounded-lg mb-4 bg-indigo-50">
+                Aucun tableau n'a été trouvé dans le document.
+            </div>
+
             <!-- Analyse de tableau -->
-            <div x-show="selectedAction === 'analyze-table' && results.analysis" class="space-y-6">
+            <div x-show="results.analysis" class="space-y-6 mt-8 border-t pt-8">
+                <h3 class="text-xl font-semibold mb-4">Analyse des tableaux</h3>
+                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <p class="text-sm text-gray-500">Lignes</p>
-                        <p class="font-medium text-gray-900" x-text="results.analysis.row_count"></p>
+                        <p class="text-sm text-gray-500">Total tableaux</p>
+                        <p class="font-medium text-gray-900" x-text="results.analysis.table_count || 'N/A'"></p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <p class="text-sm text-gray-500">Colonnes</p>
-                        <p class="font-medium text-gray-900" x-text="results.analysis.column_count"></p>
+                        <p class="text-sm text-gray-500">Total lignes</p>
+                        <p class="font-medium text-gray-900" x-text="results.analysis.total_rows || 'N/A'"></p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <p class="text-sm text-gray-500">Cellules vides</p>
-                        <p class="font-medium text-gray-900" x-text="`${results.analysis.empty_cells} (${results.analysis.empty_cells_percent}%)`"></p>
+                        <p class="text-sm text-gray-500">Moyenne lignes/tableau</p>
+                        <p class="font-medium text-gray-900" x-text="results.analysis.average_row_count || 'N/A'"></p>
                     </div>
                 </div>
-
-                <h3 class="text-lg font-semibold mb-2">Aperçu du tableau</h3>
-                <div class="overflow-x-auto border rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <template x-for="(col, colIndex) in Object.keys(results.preview[0] || {})" :key="colIndex">
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" x-text="col"></th>
-                                </template>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <template x-for="(row, rowIndex) in results.preview" :key="rowIndex">
-                                <tr class="hover:bg-gray-50">
-                                    <template x-for="(col, colIndex) in Object.keys(results.preview[0] || {})" :key="colIndex">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="row[col]"></td>
-                                    </template>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3 class="text-lg font-semibold mb-2">Analyse des colonnes</h3>
-                <div class="space-y-4">
-                    <template x-for="(col, colIndex) in results.analysis.columns" :key="colIndex">
-                        <div class="border rounded-lg overflow-hidden">
-                            <div class="bg-gray-50 p-4 border-b">
-                                <h4 class="font-medium" x-text="col.name"></h4>
-                                <div class="flex space-x-4 text-sm text-gray-500 mt-1">
-                                    <span x-text="`Type: ${col.data_type}`"></span>
-                                    <span x-text="`Non-null: ${col.non_null_count}/${results.analysis.row_count}`"></span>
+                
+                <!-- Tableaux détaillés -->
+                <div x-show="results.analysis.tables && results.analysis.tables.length > 0">
+                    <h4 class="text-lg font-medium mb-3">Détails par tableau</h4>
+                    <div class="space-y-4">
+                        <template x-for="(tableAnalysis, index) in results.analysis.tables" :key="index">
+                            <div class="border rounded-lg overflow-hidden">
+                                <div class="bg-gray-50 p-4 border-b">
+                                    <h5 class="font-medium" x-text="`Tableau ${tableAnalysis.table_id}`"></h5>
+                                    <div class="flex space-x-4 text-sm text-gray-500 mt-1">
+                                        <span x-text="`Lignes: ${tableAnalysis.rows}`"></span>
+                                        <span x-text="`Colonnes: ${tableAnalysis.columns}`"></span>
+                                        <span x-text="`Cellules vides: ${tableAnalysis.null_percentage}%`"></span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Statistiques numériques -->
-                                <div x-show="col.data_type === 'numeric'" class="space-y-2">
-                                    <p><span class="font-medium">Min:</span> <span x-text="col.min !== null ? col.min : 'N/A'"></span></p>
-                                    <p><span class="font-medium">Max:</span> <span x-text="col.max !== null ? col.max : 'N/A'"></span></p>
-                                    <p><span class="font-medium">Moyenne:</span> <span x-text="col.mean !== null ? col.mean : 'N/A'"></span></p>
-                                    <p><span class="font-medium">Médiane:</span> <span x-text="col.median !== null ? col.median : 'N/A'"></span></p>
-                                </div>
-                                
-                                <!-- Statistiques temporelles -->
-                                <div x-show="col.data_type === 'datetime'" class="space-y-2">
-                                    <p><span class="font-medium">Date min:</span> <span x-text="col.min || 'N/A'"></span></p>
-                                    <p><span class="font-medium">Date max:</span> <span x-text="col.max || 'N/A'"></span></p>
-                                </div>
-                                
-                                <!-- Statistiques textuelles -->
-                                <div x-show="col.data_type === 'text'" class="space-y-2">
-                                    <p><span class="font-medium">Valeurs uniques:</span> <span x-text="col.unique_values"></span></p>
-                                    <p><span class="font-medium">Longueur moyenne:</span> <span x-text="col.avg_length"></span></p>
-                                    <div x-show="Object.keys(col.most_common || {}).length > 0">
-                                        <p class="font-medium">Valeurs les plus fréquentes:</p>
-                                        <ul class="list-disc list-inside">
-                                            <template x-for="(count, value) in col.most_common" :key="value">
-                                                <li x-text="`${value}: ${count} occurrences`"></li>
+                                <div class="p-4">
+                                    <p class="font-medium mb-2">Colonnes numériques: <span x-text="tableAnalysis.numeric_columns_count"></span></p>
+                                    <div x-show="tableAnalysis.numeric_stats && Object.keys(tableAnalysis.numeric_stats).length > 0">
+                                        <p class="font-medium mb-1">Statistiques numériques:</p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                                            <template x-for="(stats, colName) in tableAnalysis.numeric_stats" :key="colName">
+                                                <div class="bg-gray-50 p-3 rounded">
+                                                    <p class="font-medium" x-text="colName"></p>
+                                                    <p class="text-sm text-gray-600" x-text="`Min: ${stats.min !== null ? stats.min : 'N/A'}, Max: ${stats.max !== null ? stats.max : 'N/A'}`"></p>
+                                                    <p class="text-sm text-gray-600" x-text="`Moyenne: ${stats.mean !== null ? stats.mean : 'N/A'}, Médiane: ${stats.median !== null ? stats.median : 'N/A'}`"></p>
+                                                </div>
                                             </template>
-                                        </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </template>
+                        </template>
+                    </div>
                 </div>
             </div>
 
-            <!-- Recherche dans les tableaux -->
-            <div x-show="selectedAction === 'search-tables'" class="space-y-6">
+            <!-- Résultats de recherche -->
+            <div x-show="results.search_results" class="space-y-6 mt-8 border-t pt-8">
+                <h3 class="text-xl font-semibold mb-4">Résultats de recherche</h3>
+                
                 <div class="p-4 bg-indigo-50 rounded-lg mb-4">
-                    <p class="font-medium">Recherche de: <span class="font-bold" x-text="results.query"></span></p>
+                    <p class="font-medium">Recherche de: <span class="font-bold" x-text="results.search_results.query"></span></p>
                     <p class="text-sm mt-1">
-                        <span x-text="`${results.matching_tables} tableaux correspondants sur ${results.tables_scanned}`"></span>
-                        <span class="ml-4" x-text="`${results.total_matches} correspondances trouvées`"></span>
+                        <span x-text="`${results.search_results.matching_tables} tableaux correspondants`"></span>
+                        <span class="ml-4" x-text="`${results.search_results.total_matches} correspondances trouvées`"></span>
                     </p>
                 </div>
 
-                <div x-show="results.results.length === 0" class="p-4 border rounded-lg">
+                <div x-show="results.search_results.results && results.search_results.results.length === 0" class="p-4 border rounded-lg">
                     Aucune correspondance trouvée.
                 </div>
 
-                <template x-for="(tableResult, resultIndex) in results.results" :key="resultIndex">
+                <template x-for="(tableResult, resultIndex) in results.search_results.results" :key="resultIndex">
                     <div class="border rounded-lg overflow-hidden mb-4">
                         <div class="bg-gray-50 p-4 border-b flex justify-between items-center">
                             <h3 class="font-medium" x-text="`Tableau ${tableResult.table_id}`"></h3>
@@ -530,135 +387,115 @@
                     </div>
                 </template>
             </div>
-			
-			<!-- Données structurées de facture -->
-			<div x-show="results.structured_data" class="space-y-6 mt-8 border-t pt-8">
-				<h3 class="text-xl font-semibold mb-4 flex items-center">
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-					</svg>
-					Données structurées de facture
-				</h3>
-				
-				<!-- Info sur le score de confiance -->
-				<div class="bg-blue-50 p-4 rounded-lg mb-6">
-					<div class="flex items-center">
-						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-						</svg>
-						<p class="text-sm text-blue-800">
-							<span>Type détecté: <span class="font-semibold" x-text="results.structured_data.metadata?.document_subtype || 'générique'"></span></span>
-							<span class="ml-4">Confiance: <span class="font-semibold" x-text="results.structured_data.metadata?.confidence ? (results.structured_data.metadata.confidence * 100).toFixed(0) + '%' : 'N/A'"></span></span>
-						</p>
-					</div>
-				</div>
-				
-				<!-- Informations générales de facture -->
-				<div class="bg-white rounded-lg border shadow-sm p-4 mb-6" x-show="results.structured_data.invoice_info">
-					<h4 class="font-semibold text-lg mb-3 text-gray-700">Informations de facture</h4>
-					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-						<div class="space-y-1">
-							<p class="text-sm text-gray-500">Numéro de facture</p>
-							<p class="font-medium" x-text="results.structured_data.invoice_info.number || 'N/A'"></p>
-						</div>
-						<div class="space-y-1">
-							<p class="text-sm text-gray-500">Date</p>
-							<p class="font-medium" x-text="results.structured_data.invoice_info.date || 'N/A'"></p>
-						</div>
-						<div class="space-y-1">
-							<p class="text-sm text-gray-500">Fournisseur</p>
-							<p class="font-medium" x-text="results.structured_data.invoice_info.vendor || 'N/A'"></p>
-						</div>
-						<div class="space-y-1">
-							<p class="text-sm text-gray-500">Numéro TVA</p>
-							<p class="font-medium" x-text="results.structured_data.invoice_info.vat_number || 'N/A'"></p>
-						</div>
-						<!-- Affichage de l'adresse si disponible -->
-						<div class="col-span-2 space-y-1" x-show="results.structured_data.invoice_info.address">
-							<p class="text-sm text-gray-500">Adresse</p>
-							<p class="font-medium">
-								<template x-for="(line, index) in results.structured_data.invoice_info.address" :key="index">
-									<span>
-										<span x-text="line"></span><br x-show="index < results.structured_data.invoice_info.address.length - 1">
-									</span>
-								</template>
-							</p>
-						</div>
-					</div>
-				</div>
-				
-				<!-- Lignes de facture -->
-				<div class="bg-white rounded-lg border shadow-sm p-4 mb-6" x-show="results.structured_data.line_items && results.structured_data.line_items.length > 0">
-					<h4 class="font-semibold text-lg mb-3 text-gray-700">Lignes de facturation</h4>
-					<div class="overflow-x-auto">
-						<table class="min-w-full divide-y divide-gray-200">
-							<thead class="bg-gray-50">
-								<tr>
-									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-									<th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
-								</tr>
-							</thead>
-							<tbody class="bg-white divide-y divide-gray-200">
-								<template x-for="(item, index) in results.structured_data.line_items" :key="index">
-									<tr>
-										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="item.date || '-'"></td>
-										<td class="px-6 py-4 text-sm text-gray-700">
-											<span x-show="item.route" x-text="item.route"></span>
-											<span x-show="item.route && item.passenger" class="text-gray-500 ml-2" x-text="'(' + item.passenger + ')'"></span>
-											<span x-show="!item.route" x-text="item.description || 'Réduction'"></span>
-										</td>
-										<td class="px-6 py-4 whitespace-nowrap text-sm">
-											<span x-show="item.type === 'flight'" class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Vol</span>
-											<span x-show="item.type === 'discount'" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Réduction</span>
-											<span x-show="item.type !== 'flight' && item.type !== 'discount'" class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800" x-text="item.type"></span>
-										</td>
-										<td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium" :class="{'text-green-600': item.type === 'discount', 'text-gray-900': item.type !== 'discount'}" x-text="(item.amount < 0 ? '' : '') + item.amount.toFixed(2) + ' €'"></td>
-									</tr>
-								</template>
-							</tbody>
-						</table>
-					</div>
-				</div>
-				
-				<!-- Totaux de facture -->
-				<div class="bg-white rounded-lg border shadow-sm p-4" x-show="results.structured_data.totals">
-					<h4 class="font-semibold text-lg mb-3 text-gray-700">Totaux</h4>
-					<div class="bg-gray-50 p-4 rounded-lg max-w-md ml-auto">
-						<div class="flex justify-between py-2 border-b border-gray-200">
-							<span class="text-gray-600">Sous-total:</span>
-							<span class="font-medium" x-text="results.structured_data.totals.subtotal ? results.structured_data.totals.subtotal.toFixed(2) + ' €' : 'N/A'"></span>
-						</div>
-						
-						<!-- TVA -->
-						<template x-if="results.structured_data.totals.vat">
-							<template x-for="(vat, index) in Array.isArray(results.structured_data.totals.vat) ? results.structured_data.totals.vat : [results.structured_data.totals.vat]" :key="index">
-								<div class="flex justify-between py-2 border-b border-gray-200">
-									<span class="text-gray-600" x-text="'TVA (' + vat.rate + '):'"></span>
-									<span class="font-medium" x-text="vat.amount.toFixed(2) + ' €'"></span>
-								</div>
-							</template>
-						</template>
-						
-						<!-- TVA (si présente comme total direct) -->
-						<div class="flex justify-between py-2 border-b border-gray-200" x-show="results.structured_data.totals.vat_total">
-							<span class="text-gray-600">TVA totale:</span>
-							<span class="font-medium" x-text="results.structured_data.totals.vat_total.toFixed(2) + ' €'"></span>
-						</div>
-						
-						<!-- Total -->
-						<div class="flex justify-between py-2 font-semibold text-lg">
-							<span>Total:</span>
-							<span x-text="results.structured_data.totals.total ? results.structured_data.totals.total.toFixed(2) + ' ' + (results.structured_data.totals.currency || '€') : 'N/A'"></span>
-						</div>
-					</div>
-				</div>
-			</div>
-
+            
+            <!-- Données structurées de facture -->
+            <div x-show="results.structured_data" class="space-y-6 mt-8 border-t pt-8">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Données structurées de facture
+                </h3>
+                
+                <!-- Info sur le score de confiance -->
+                <div class="bg-blue-50 p-4 rounded-lg mb-6" x-show="results.structured_data.metadata">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="text-sm text-blue-800">
+                            <span>Type détecté: <span class="font-semibold" x-text="results.structured_data.metadata?.document_subtype || 'générique'"></span></span>
+                            <span class="ml-4">Confiance: <span class="font-semibold" x-text="results.structured_data.metadata?.confidence ? (results.structured_data.metadata.confidence * 100).toFixed(0) + '%' : 'N/A'"></span></span>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Informations générales de facture -->
+                <div class="bg-white rounded-lg border shadow-sm p-4 mb-6" x-show="results.structured_data.invoice_info">
+                    <h4 class="font-semibold text-lg mb-3 text-gray-700">Informations de facture</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="space-y-1">
+                            <p class="text-sm text-gray-500">Numéro de facture</p>
+                            <p class="font-medium" x-text="results.structured_data.invoice_info.number || 'N/A'"></p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm text-gray-500">Date</p>
+                            <p class="font-medium" x-text="results.structured_data.invoice_info.date || 'N/A'"></p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm text-gray-500">Fournisseur</p>
+                            <p class="font-medium" x-text="results.structured_data.invoice_info.vendor || 'N/A'"></p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm text-gray-500">Numéro TVA</p>
+                            <p class="font-medium" x-text="results.structured_data.invoice_info.vat_number || 'N/A'"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lignes de facture -->
+                <div class="bg-white rounded-lg border shadow-sm p-4 mb-6" x-show="results.structured_data.line_items && results.structured_data.line_items.length > 0">
+                    <h4 class="font-semibold text-lg mb-3 text-gray-700">Lignes de facturation</h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix unitaire</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <template x-for="(item, index) in results.structured_data.line_items" :key="index">
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm text-gray-700" x-text="item.description || 'N/A'"></td>
+                                        <td class="px-6 py-4 text-sm text-gray-700" x-text="item.quantity || 'N/A'"></td>
+                                        <td class="px-6 py-4 text-sm text-gray-700" x-text="item.unit_price ? item.unit_price.toFixed(2) + ' €' : 'N/A'"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium" x-text="item.amount ? item.amount.toFixed(2) + ' €' : 'N/A'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Totaux de facture -->
+                <div class="bg-white rounded-lg border shadow-sm p-4" x-show="results.structured_data.totals">
+                    <h4 class="font-semibold text-lg mb-3 text-gray-700">Totaux</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg max-w-md ml-auto">
+                        <div class="flex justify-between py-2 border-b border-gray-200" x-show="results.structured_data.totals.subtotal">
+                            <span class="text-gray-600">Sous-total:</span>
+                            <span class="font-medium" x-text="results.structured_data.totals.subtotal ? results.structured_data.totals.subtotal.toFixed(2) + ' €' : 'N/A'"></span>
+                        </div>
+                        
+                        <!-- TVA -->
+                        <template x-if="results.structured_data.totals.vat">
+                            <template x-for="(vat, index) in Array.isArray(results.structured_data.totals.vat) ? results.structured_data.totals.vat : [results.structured_data.totals.vat]" :key="index">
+                                <div class="flex justify-between py-2 border-b border-gray-200">
+                                    <span class="text-gray-600" x-text="'TVA (' + vat.rate + '):'"></span>
+                                    <span class="font-medium" x-text="vat.amount.toFixed(2) + ' €'"></span>
+                                </div>
+                            </template>
+                        </template>
+                        
+                        <!-- TVA (si présente comme total direct) -->
+                        <div class="flex justify-between py-2 border-b border-gray-200" x-show="results.structured_data.totals.vat_total">
+                            <span class="text-gray-600">TVA totale:</span>
+                            <span class="font-medium" x-text="results.structured_data.totals.vat_total.toFixed(2) + ' €'"></span>
+                        </div>
+                        
+                        <!-- Total -->
+                        <div class="flex justify-between py-2 font-semibold text-lg">
+                            <span>Total:</span>
+                            <span x-text="results.structured_data.totals.total ? results.structured_data.totals.total.toFixed(2) + ' ' + (results.structured_data.totals.currency || '€') : 'N/A'"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Images des tableaux -->
-            <div x-show="(selectedAction === 'extract-tables' || selectedAction === 'extract-tables-ocr') && results.images && results.images.length > 0" class="mt-8">
+            <div x-show="results.images && results.images.length > 0" class="mt-8 border-t pt-8">
                 <h3 class="text-lg font-semibold mb-4">Images des tableaux</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <template x-for="(image, imageIndex) in results.images" :key="imageIndex">
@@ -681,20 +518,6 @@
                     </svg>
                     Télécharger les résultats
                 </button>
-            </div>
-        </div>
-
-        <!-- Message d'erreur -->
-        <div x-show="error" class="bg-red-50 border-l-4 border-red-500 p-4 mb-8">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm text-red-700" x-text="error"></p>
-                </div>
             </div>
         </div>
     </main>
@@ -730,26 +553,26 @@
                 pdfTypeDetectionConfidence: 0,
                 
                 // Options de traitement
-                selectedAction: 'extract-tables',
-                pages: 'all',
-                extractionMethod: 'auto',
+                strategy: 'auto',
                 outputFormat: 'json',
+                pages: 'all',
+                documentType: 'generic',
                 includeImages: false,
-                pageNumber: 1,
-                tableIndex: 0,
-                searchQuery: '',
-                caseSensitive: false,
-
+                
                 // Options OCR
                 ocrEnabled: false,
                 ocrLanguage: 'fra+eng',
                 ocrEnhanceImage: true,
                 ocrDeskew: true,
-				documentType: 'generic',
+                
+                // Options avancées
+                analyze: false,
+                searchQuery: '',
+                backgroundProcessing: false,
                 
                 // Configuration de l'API
-                apiEndpoint: 'https://api.symple.fr/api/pdf',
-				apiKey: 'gustave_slCNYWzQG8eEQjytE7awzlScPsH3QbRj',
+                apiEndpoint: 'https://api.symple.fr/api/pdf/tables',
+                apiKey: 'gustave_slCNYWzQG8eEQjytE7awzlScPsH3QbRj',
                 
                 // Méthodes
                 handleFileSelect(event) {
@@ -758,7 +581,6 @@
                         this.selectedFile = file;
                         this.fileSelected = true;
                         this.error = null;
-                        // Réinitialiser la détection du type de PDF
                         this.isPdfTypeDetected = false;
                         this.isPdfScanned = false;
                     } else {
@@ -773,7 +595,6 @@
                         this.selectedFile = file;
                         this.fileSelected = true;
                         this.error = null;
-                        // Réinitialiser la détection du type de PDF
                         this.isPdfTypeDetected = false;
                         this.isPdfScanned = false;
                     } else {
@@ -790,24 +611,20 @@
                 
                 resetForm() {
                     this.resetFile();
-                    this.selectedAction = 'extract-tables';
-                    this.pages = 'all';
-                    this.extractionMethod = 'auto';
+                    this.strategy = 'auto';
                     this.outputFormat = 'json';
+                    this.pages = 'all';
+                    this.documentType = 'generic';
                     this.includeImages = false;
-                    this.pageNumber = 1;
-                    this.tableIndex = 0;
-                    this.searchQuery = '';
-                    this.caseSensitive = false;
                     this.ocrEnabled = false;
                     this.ocrLanguage = 'fra+eng';
                     this.ocrEnhanceImage = true;
                     this.ocrDeskew = true;
-					this.documentType = 'generic';
+                    this.analyze = false;
+                    this.searchQuery = '';
+                    this.backgroundProcessing = false;
                     this.results = null;
                     this.error = null;
-                    this.isPdfTypeDetected = false;
-                    this.isPdfScanned = false;
                 },
                 
                 formatFileSize(bytes) {
@@ -816,60 +633,6 @@
                     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
                     const i = Math.floor(Math.log(bytes) / Math.log(k));
                     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-                },
-                
-                getEndpoint() {
-                    const endpoints = {
-                        'extract-tables': `${this.apiEndpoint}/extract-tables`,
-                        'extract-tables-ocr': `${this.apiEndpoint}/extract-tables-ocr`,
-                        'analyze-table': `${this.apiEndpoint}/analyze-table`,
-                        'convert-table': `${this.apiEndpoint}/convert-table`,
-                        'search-tables': `${this.apiEndpoint}/search-tables`,
-                        'export-all-tables': `${this.apiEndpoint}/export-all-tables`
-                    };
-					const endpoint = baseEndpoints[this.selectedAction];
-					return `${endpoint}?api_key=${this.apiKey}`;
-                },
-                
-                async detectPdfType() {
-                    if (!this.fileSelected) return;
-                    
-                    this.error = null;
-                    this.isDetecting = true;
-                    
-                    try {
-                        const formData = new FormData();
-                        formData.append('file', this.selectedFile);
-                        
-                        const response = await fetch(`${this.apiEndpoint}/detect-pdf-type?api_key=${this.apiKey}`, {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.detail || 'Une erreur s\'est produite');
-                        }
-                        
-                        const result = await response.json();
-                        this.isPdfScanned = result.is_scanned;
-                        this.pdfTypeDetectionConfidence = result.confidence;
-                        this.isPdfTypeDetected = true;
-                        
-                        // Activer automatiquement l'OCR si PDF scanné
-                        if (this.isPdfScanned) {
-                            this.ocrEnabled = true;
-                            if (this.selectedAction === 'extract-tables') {
-                                this.extractionMethod = 'ocr';
-                            }
-                        }
-                        
-                    } catch (error) {
-                        this.error = error.message || 'Une erreur s\'est produite lors de la détection du type de PDF';
-                        console.error('Erreur:', error);
-                    } finally {
-                        this.isDetecting = false;
-                    }
                 },
                 
                 async submitForm() {
@@ -883,60 +646,29 @@
                         const formData = new FormData();
                         formData.append('file', this.selectedFile);
                         
-                        // Ajout des paramètres selon l'action
-                        switch(this.selectedAction) {
-                            case 'extract-tables':
-                                formData.append('pages', this.pages);
-                                formData.append('extraction_method', this.extractionMethod);
-                                formData.append('output_format', this.outputFormat);
-                                formData.append('include_images', this.includeImages);
-                                formData.append('ocr_enabled', this.ocrEnabled);
-								formData.append('document_type', this.documentType);
-                                
-                                // Paramètres OCR si activé
-                                if (this.ocrEnabled || this.extractionMethod === 'ocr') {
-                                    formData.append('ocr_language', this.ocrLanguage);
-                                    formData.append('ocr_enhance_image', this.ocrEnhanceImage);
-                                    formData.append('ocr_deskew', this.ocrDeskew);
-                                }
-                                break;
-                                
-                            case 'extract-tables-ocr':
-                                formData.append('pages', this.pages);
-                                formData.append('languages', this.ocrLanguage);
-                                formData.append('enhance_image', this.ocrEnhanceImage);
-                                formData.append('deskew', this.ocrDeskew);
-                                formData.append('output_format', this.outputFormat);
-                                break;
-                                
-                            case 'analyze-table':
-                                formData.append('page', this.pageNumber);
-                                formData.append('table_index', this.tableIndex);
-                                formData.append('ocr_enabled', this.ocrEnabled);
-                                break;
-                                
-                            case 'convert-table':
-                                formData.append('page', this.pageNumber);
-                                formData.append('table_index', this.tableIndex);
-                                formData.append('output_format', this.outputFormat);
-                                formData.append('ocr_enabled', this.ocrEnabled);
-                                break;
-                                
-                            case 'search-tables':
-                                formData.append('query', this.searchQuery);
-                                formData.append('pages', this.pages);
-                                formData.append('case_sensitive', this.caseSensitive);
-                                formData.append('ocr_enabled', this.ocrEnabled);
-                                break;
-                                
-                            case 'export-all-tables':
-                                formData.append('pages', this.pages);
-                                formData.append('output_format', this.outputFormat);
-                                formData.append('ocr_enabled', this.ocrEnabled);
-                                break;
+                        // Paramètres communs
+                        formData.append('strategy', this.strategy);
+                        formData.append('output_format', this.outputFormat);
+                        formData.append('pages', this.pages);
+                        formData.append('document_type', this.documentType);
+                        formData.append('ocr_enabled', this.ocrEnabled);
+                        formData.append('include_images', this.includeImages);
+                        formData.append('analyze', this.analyze);
+                        formData.append('background_processing', this.backgroundProcessing);
+                        
+                        // Paramètres OCR
+                        if (this.ocrEnabled) {
+                            formData.append('ocr_language', this.ocrLanguage);
+                            formData.append('ocr_enhance_image', this.ocrEnhanceImage);
+                            formData.append('ocr_deskew', this.ocrDeskew);
                         }
                         
-                        const response = await fetch(this.getEndpoint(), {
+                        // Recherche si demandée
+                        if (this.searchQuery.trim()) {
+                            formData.append('search_query', this.searchQuery);
+                        }
+                        
+                        const response = await fetch(`${this.apiEndpoint}/extract?api_key=${this.apiKey}`, {
                             method: 'POST',
                             body: formData
                         });
@@ -946,37 +678,24 @@
                             throw new Error(errorData.detail || 'Une erreur s\'est produite');
                         }
                         
-                        // Traitement spécial pour les téléchargements directs (export-all-tables)
-                        if (this.selectedAction === 'export-all-tables' && this.outputFormat !== 'json') {
-                            const blob = await response.blob();
-                            const fileName = this.selectedFile.name.replace('.pdf', '') + '_tables.' + 
-                                (this.outputFormat === 'excel' ? 'xlsx' : (this.outputFormat === 'csv' ? 'zip' : this.outputFormat));
-                            
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.style.display = 'none';
-                            a.href = url;
-                            a.download = fileName;
-                            document.body.appendChild(a);
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                            
-                            this.results = {
-                                filename: this.selectedFile.name,
-                                file_size: this.selectedFile.size,
-                                processing_time: 0,
-                                tables_count: 0,
-                                message: `Tableaux exportés avec succès au format ${this.outputFormat}`,
-                                ocr_used: this.ocrEnabled
-                            };
+                        const result = await response.json();
+                        
+                        // Si c'est une tâche en arrière-plan
+                        if (result.task_id && result.status === 'processing') {
+                            await this.pollTaskStatus(result.task_id);
                         } else {
-                            this.results = await response.json();
+                            this.results = result;
                         }
                         
                         // Scroll to results
-                        setTimeout(() => {
-                            document.querySelector('.bg-white.rounded-lg.shadow-md.p-6:last-child').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }, 100);
+                        if (this.results) {
+                            setTimeout(() => {
+                                const resultsElement = document.querySelector('.bg-white.rounded-lg.shadow-md.p-6:last-child');
+                                if (resultsElement) {
+                                    resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }, 100);
+                        }
                         
                     } catch (error) {
                         this.error = error.message || 'Une erreur s\'est produite lors du traitement';
@@ -986,13 +705,49 @@
                     }
                 },
                 
+                async pollTaskStatus(taskId) {
+                    // Fonction pour vérifier l'état d'une tâche en arrière-plan
+                    const checkStatus = async () => {
+                        try {
+                            const response = await fetch(`${this.apiEndpoint}/tasks/${taskId}?api_key=${this.apiKey}`);
+                            
+                            if (!response.ok) {
+                                throw new Error('Erreur lors de la récupération du statut de la tâche');
+                            }
+                            
+                            const taskStatus = await response.json();
+                            
+                            if (taskStatus.status === 'completed') {
+                                this.results = taskStatus.results;
+                                return true;
+                            } else if (taskStatus.status === 'error') {
+                                throw new Error(taskStatus.message || 'Erreur lors du traitement');
+                            }
+                            
+                            return false;
+                        } catch (error) {
+                            this.error = error.message;
+                            return true; // Arrêter le polling en cas d'erreur
+                        }
+                    };
+                    
+                    // Vérifier toutes les 2 secondes jusqu'à ce que la tâche soit terminée
+                    let isComplete = false;
+                    while (!isComplete && this.isLoading) {
+                        isComplete = await checkStatus();
+                        if (!isComplete) {
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                        }
+                    }
+                },
+                
                 downloadResults() {
                     if (!this.results) return;
                     
                     const dataStr = JSON.stringify(this.results, null, 2);
                     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
                     
-                    const exportFileName = `${this.selectedFile.name.replace('.pdf', '')}_${this.selectedAction}_results.json`;
+                    const exportFileName = `${this.selectedFile.name.replace('.pdf', '')}_results.json`;
                     
                     const linkElement = document.createElement('a');
                     linkElement.setAttribute('href', dataUri);
