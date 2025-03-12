@@ -89,23 +89,47 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Action à effectuer</label>
-                        <select x-model="selectedAction" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="extract-tables">Extraire les tableaux</option>
-                            <option value="extract-tables-ocr">Extraire les tableaux (OCR)</option>
-                            <option value="analyze-table">Analyser un tableau</option>
-                            <option value="convert-table">Convertir un tableau</option>
-                            <option value="search-tables">Rechercher dans les tableaux</option>
-                            <option value="export-all-tables">Exporter tous les tableaux</option>
-                        </select>
-                    </div>
+					<div>
+						<label class="block text-gray-700 font-medium mb-2">Action à effectuer</label>
+						<select x-model="selectedAction" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+							<option value="extract-tables">Extraire les tableaux</option>
+							<option value="extract-tables-ocr">Extraire les tableaux (OCR)</option>
+							<option value="analyze-table">Analyser un tableau</option>
+							<option value="convert-table">Convertir un tableau</option>
+							<option value="search-tables">Rechercher dans les tableaux</option>
+							<option value="export-all-tables">Exporter tous les tableaux</option>
+						</select>
+					</div>
 
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Pages</label>
-                        <input type="text" x-model="pages" placeholder="all, 1, 1-3, 1,3,5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                </div>
+					<div>
+						<label class="block text-gray-700 font-medium mb-2">Pages</label>
+						<input type="text" x-model="pages" placeholder="all, 1, 1-3, 1,3,5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+					</div>
+				</div>
+				
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+					<div>
+						<label class="block text-gray-700 font-medium mb-2">Type de document</label>
+						<select x-model="documentType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+							<option value="generic">Générique</option>
+							<option value="invoice">Facture</option>
+							<option value="receipt">Reçu</option>
+						</select>
+					</div>
+					
+					<div x-show="documentType === 'invoice'" class="bg-blue-50 p-3 rounded border border-blue-200">
+						<div class="flex">
+							<div class="flex-shrink-0">
+								<svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+									<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+								</svg>
+							</div>
+							<div class="ml-3">
+								<p class="text-sm text-blue-700">Le mode facture applique un post-traitement spécifique pour extraire informations, lignes et totaux.</p>
+							</div>
+						</div>
+					</div>
+				</div>
 
                 <!-- Options spécifiques à l'extraction de tableaux standard -->
                 <div x-show="selectedAction === 'extract-tables'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -506,6 +530,132 @@
                     </div>
                 </template>
             </div>
+			
+			<!-- Données structurées de facture -->
+			<div x-show="results.structured_data" class="space-y-6 mt-8 border-t pt-8">
+				<h3 class="text-xl font-semibold mb-4 flex items-center">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+					</svg>
+					Données structurées de facture
+				</h3>
+				
+				<!-- Info sur le score de confiance -->
+				<div class="bg-blue-50 p-4 rounded-lg mb-6">
+					<div class="flex items-center">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						<p class="text-sm text-blue-800">
+							<span>Type détecté: <span class="font-semibold" x-text="results.structured_data.metadata?.document_subtype || 'générique'"></span></span>
+							<span class="ml-4">Confiance: <span class="font-semibold" x-text="results.structured_data.metadata?.confidence ? (results.structured_data.metadata.confidence * 100).toFixed(0) + '%' : 'N/A'"></span></span>
+						</p>
+					</div>
+				</div>
+				
+				<!-- Informations générales de facture -->
+				<div class="bg-white rounded-lg border shadow-sm p-4 mb-6" x-show="results.structured_data.invoice_info">
+					<h4 class="font-semibold text-lg mb-3 text-gray-700">Informations de facture</h4>
+					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+						<div class="space-y-1">
+							<p class="text-sm text-gray-500">Numéro de facture</p>
+							<p class="font-medium" x-text="results.structured_data.invoice_info.number || 'N/A'"></p>
+						</div>
+						<div class="space-y-1">
+							<p class="text-sm text-gray-500">Date</p>
+							<p class="font-medium" x-text="results.structured_data.invoice_info.date || 'N/A'"></p>
+						</div>
+						<div class="space-y-1">
+							<p class="text-sm text-gray-500">Fournisseur</p>
+							<p class="font-medium" x-text="results.structured_data.invoice_info.vendor || 'N/A'"></p>
+						</div>
+						<div class="space-y-1">
+							<p class="text-sm text-gray-500">Numéro TVA</p>
+							<p class="font-medium" x-text="results.structured_data.invoice_info.vat_number || 'N/A'"></p>
+						</div>
+						<!-- Affichage de l'adresse si disponible -->
+						<div class="col-span-2 space-y-1" x-show="results.structured_data.invoice_info.address">
+							<p class="text-sm text-gray-500">Adresse</p>
+							<p class="font-medium">
+								<template x-for="(line, index) in results.structured_data.invoice_info.address" :key="index">
+									<span>
+										<span x-text="line"></span><br x-show="index < results.structured_data.invoice_info.address.length - 1">
+									</span>
+								</template>
+							</p>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Lignes de facture -->
+				<div class="bg-white rounded-lg border shadow-sm p-4 mb-6" x-show="results.structured_data.line_items && results.structured_data.line_items.length > 0">
+					<h4 class="font-semibold text-lg mb-3 text-gray-700">Lignes de facturation</h4>
+					<div class="overflow-x-auto">
+						<table class="min-w-full divide-y divide-gray-200">
+							<thead class="bg-gray-50">
+								<tr>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+									<th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+								</tr>
+							</thead>
+							<tbody class="bg-white divide-y divide-gray-200">
+								<template x-for="(item, index) in results.structured_data.line_items" :key="index">
+									<tr>
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="item.date || '-'"></td>
+										<td class="px-6 py-4 text-sm text-gray-700">
+											<span x-show="item.route" x-text="item.route"></span>
+											<span x-show="item.route && item.passenger" class="text-gray-500 ml-2" x-text="'(' + item.passenger + ')'"></span>
+											<span x-show="!item.route" x-text="item.description || 'Réduction'"></span>
+										</td>
+										<td class="px-6 py-4 whitespace-nowrap text-sm">
+											<span x-show="item.type === 'flight'" class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Vol</span>
+											<span x-show="item.type === 'discount'" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Réduction</span>
+											<span x-show="item.type !== 'flight' && item.type !== 'discount'" class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800" x-text="item.type"></span>
+										</td>
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium" :class="{'text-green-600': item.type === 'discount', 'text-gray-900': item.type !== 'discount'}" x-text="(item.amount < 0 ? '' : '') + item.amount.toFixed(2) + ' €'"></td>
+									</tr>
+								</template>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				
+				<!-- Totaux de facture -->
+				<div class="bg-white rounded-lg border shadow-sm p-4" x-show="results.structured_data.totals">
+					<h4 class="font-semibold text-lg mb-3 text-gray-700">Totaux</h4>
+					<div class="bg-gray-50 p-4 rounded-lg max-w-md ml-auto">
+						<div class="flex justify-between py-2 border-b border-gray-200">
+							<span class="text-gray-600">Sous-total:</span>
+							<span class="font-medium" x-text="results.structured_data.totals.subtotal ? results.structured_data.totals.subtotal.toFixed(2) + ' €' : 'N/A'"></span>
+						</div>
+						
+						<!-- TVA -->
+						<template x-if="results.structured_data.totals.vat">
+							<template x-for="(vat, index) in Array.isArray(results.structured_data.totals.vat) ? results.structured_data.totals.vat : [results.structured_data.totals.vat]" :key="index">
+								<div class="flex justify-between py-2 border-b border-gray-200">
+									<span class="text-gray-600" x-text="'TVA (' + vat.rate + '):'"></span>
+									<span class="font-medium" x-text="vat.amount.toFixed(2) + ' €'"></span>
+								</div>
+							</template>
+						</template>
+						
+						<!-- TVA (si présente comme total direct) -->
+						<div class="flex justify-between py-2 border-b border-gray-200" x-show="results.structured_data.totals.vat_total">
+							<span class="text-gray-600">TVA totale:</span>
+							<span class="font-medium" x-text="results.structured_data.totals.vat_total.toFixed(2) + ' €'"></span>
+						</div>
+						
+						<!-- Total -->
+						<div class="flex justify-between py-2 font-semibold text-lg">
+							<span>Total:</span>
+							<span x-text="results.structured_data.totals.total ? results.structured_data.totals.total.toFixed(2) + ' ' + (results.structured_data.totals.currency || '€') : 'N/A'"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+
 
             <!-- Images des tableaux -->
             <div x-show="(selectedAction === 'extract-tables' || selectedAction === 'extract-tables-ocr') && results.images && results.images.length > 0" class="mt-8">
@@ -595,9 +745,11 @@
                 ocrLanguage: 'fra+eng',
                 ocrEnhanceImage: true,
                 ocrDeskew: true,
+				documentType: 'generic',
                 
                 // Configuration de l'API
-                apiEndpoint: 'http://192.168.0.18:8000/api/pdf',
+                apiEndpoint: 'https://api.symple.fr/api/pdf',
+				apiKey: 'gustave_slCNYWzQG8eEQjytE7awzlScPsH3QbRj',
                 
                 // Méthodes
                 handleFileSelect(event) {
@@ -651,6 +803,7 @@
                     this.ocrLanguage = 'fra+eng';
                     this.ocrEnhanceImage = true;
                     this.ocrDeskew = true;
+					this.documentType = 'generic';
                     this.results = null;
                     this.error = null;
                     this.isPdfTypeDetected = false;
@@ -674,7 +827,8 @@
                         'search-tables': `${this.apiEndpoint}/search-tables`,
                         'export-all-tables': `${this.apiEndpoint}/export-all-tables`
                     };
-                    return endpoints[this.selectedAction];
+					const endpoint = baseEndpoints[this.selectedAction];
+					return `${endpoint}?api_key=${this.apiKey}`;
                 },
                 
                 async detectPdfType() {
@@ -687,7 +841,7 @@
                         const formData = new FormData();
                         formData.append('file', this.selectedFile);
                         
-                        const response = await fetch(`${this.apiEndpoint}/detect-pdf-type`, {
+                        const response = await fetch(`${this.apiEndpoint}/detect-pdf-type?api_key=${this.apiKey}`, {
                             method: 'POST',
                             body: formData
                         });
@@ -737,6 +891,7 @@
                                 formData.append('output_format', this.outputFormat);
                                 formData.append('include_images', this.includeImages);
                                 formData.append('ocr_enabled', this.ocrEnabled);
+								formData.append('document_type', this.documentType);
                                 
                                 // Paramètres OCR si activé
                                 if (this.ocrEnabled || this.extractionMethod === 'ocr') {
