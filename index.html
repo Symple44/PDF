@@ -62,10 +62,12 @@
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Type de document</label>
                         <select x-model="documentType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="generic">Générique</option>
-                            <option value="invoice">Facture</option>
-                            <option value="receipt">Reçu</option>
-                        </select>
+							<option value="auto">Auto-détection</option>
+							<option value="generic">Générique</option>
+							<option value="invoice">Facture</option>
+							<option value="receipt">Reçu</option>
+							<option value="devis">Devis technique</option>
+						</select>
                     </div>
 
                     <div>
@@ -78,7 +80,7 @@
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Stratégie d'extraction</label>
                         <select x-model="strategy" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="auto">Auto</option>
+                            <option value="auto">Auto-détection</option>
                             <option value="tabula">Tabula</option>
                             <option value="camelot">Camelot</option>
                             <option value="pdfplumber">PDFPlumber</option>
@@ -496,7 +498,143 @@
                     </div>
                 </div>
             </div>
-
+			
+			<!-- Données structurées de devis technique -->
+			<div x-show="results.type_document === 'devis_technique'" class="space-y-6 mt-8 border-t pt-8">
+				<h3 class="text-xl font-semibold mb-4 flex items-center">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+					</svg>
+					Devis technique
+				</h3>
+				
+				<!-- Info sur le score de confiance -->
+				<div class="bg-green-50 p-4 rounded-lg mb-6" x-show="results.metadata">
+					<div class="flex items-center">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						<p class="text-sm text-green-800">
+							<span>Confiance: <span class="font-semibold" x-text="results.metadata?.confidence ? (results.metadata.confidence * 100).toFixed(0) + '%' : 'N/A'"></span></span>
+							<span class="ml-4">Méthode: <span class="font-semibold" x-text="results.extraction_method || 'standard'"></span></span>
+						</p>
+					</div>
+				</div>
+				
+				<!-- Informations générales du devis -->
+				<div class="bg-white rounded-lg border shadow-sm p-4 mb-6" x-show="results.metadata">
+					<h4 class="font-semibold text-lg mb-3 text-gray-700">Informations du devis</h4>
+					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+						<div class="space-y-1">
+							<p class="text-sm text-gray-500">Référence</p>
+							<p class="font-medium" x-text="results.metadata.reference || 'N/A'"></p>
+						</div>
+						<div class="space-y-1">
+							<p class="text-sm text-gray-500">Date</p>
+							<p class="font-medium" x-text="results.metadata.date || 'N/A'"></p>
+						</div>
+						<div class="space-y-1">
+							<p class="text-sm text-gray-500">Client</p>
+							<p class="font-medium" x-text="results.metadata.client || 'N/A'"></p>
+						</div>
+						<div class="space-y-1">
+							<p class="text-sm text-gray-500">Contact</p>
+							<p class="font-medium" x-text="results.metadata.contact || 'N/A'"></p>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Sections du devis -->
+				<div class="bg-white rounded-lg border shadow-sm p-4 mb-6" x-show="results.sections && results.sections.length > 0">
+					<h4 class="font-semibold text-lg mb-3 text-gray-700">Sections techniques</h4>
+					
+					<template x-for="(section, sectionIndex) in results.sections" :key="sectionIndex">
+						<div class="mb-6">
+							<h5 class="font-medium flex items-center text-lg mb-2">
+								<span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+								<span x-text="section.type ? section.type.charAt(0).toUpperCase() + section.type.slice(1) : 'Section'"></span>
+								<span x-show="section.prix_ht" class="ml-auto text-base" x-text="section.prix_ht + ' €'"></span>
+							</h5>
+							
+							<!-- Éléments de la section -->
+							<div x-show="section.elements && section.elements.length > 0" class="bg-gray-50 rounded-lg p-4">
+								<div class="overflow-x-auto">
+									<table class="min-w-full divide-y divide-gray-200">
+										<thead class="bg-gray-100">
+											<tr>
+												<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+												<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
+												<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unité</th>
+												<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dimensions</th>
+												<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spécifications</th>
+												<th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Prix unitaire</th>
+											</tr>
+										</thead>
+										<tbody class="bg-white divide-y divide-gray-200">
+											<template x-for="(element, elementIndex) in section.elements" :key="elementIndex">
+												<tr class="hover:bg-gray-50">
+													<td class="px-4 py-2 text-sm text-gray-700" x-text="element.description || 'N/A'"></td>
+													<td class="px-4 py-2 text-sm text-gray-700" x-text="element.quantite || 'N/A'"></td>
+													<td class="px-4 py-2 text-sm text-gray-700" x-text="element.unite || 'N/A'"></td>
+													<td class="px-4 py-2 text-sm text-gray-700" x-text="element.dimensions || 'N/A'"></td>
+													<td class="px-4 py-2 text-sm text-gray-700" x-text="element.specifications || 'N/A'"></td>
+													<td class="px-4 py-2 text-sm text-gray-700 text-right" x-text="element.prix_unitaire ? element.prix_unitaire + ' €' : 'N/A'"></td>
+												</tr>
+											</template>
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<div x-show="!section.elements || section.elements.length === 0" class="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
+								Aucun élément trouvé dans cette section
+							</div>
+						</div>
+					</template>
+				</div>
+				
+				<!-- Totaux du devis -->
+				<div class="bg-white rounded-lg border shadow-sm p-4" x-show="results.totals">
+					<h4 class="font-semibold text-lg mb-3 text-gray-700">Totaux</h4>
+					<div class="bg-gray-50 p-4 rounded-lg max-w-md ml-auto">
+						<div class="flex justify-between py-2 border-b border-gray-200" x-show="results.totals.montant_ht !== null">
+							<span class="text-gray-600">Montant HT:</span>
+							<span class="font-medium" x-text="results.totals.montant_ht + ' ' + results.totals.currency"></span>
+						</div>
+						
+						<!-- TVA -->
+						<div class="flex justify-between py-2 border-b border-gray-200" x-show="results.totals.tva !== null">
+							<span class="text-gray-600">TVA:</span>
+							<span class="font-medium" x-text="results.totals.tva + ' ' + results.totals.currency"></span>
+						</div>
+						
+						<!-- Total TTC -->
+						<div class="flex justify-between py-2 font-semibold text-lg" x-show="results.totals.montant_ttc !== null">
+							<span>Total TTC:</span>
+							<span x-text="results.totals.montant_ttc + ' ' + results.totals.currency"></span>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Conditions -->
+				<div class="bg-white rounded-lg border shadow-sm p-4" x-show="results.conditions">
+					<h4 class="font-semibold text-lg mb-3 text-gray-700">Conditions</h4>
+					<div class="space-y-3">
+						<div class="flex" x-show="results.conditions.delai">
+							<span class="font-medium w-32">Délai:</span>
+							<span x-text="results.conditions.delai"></span>
+						</div>
+						<div class="flex" x-show="results.conditions.paiement">
+							<span class="font-medium w-32">Paiement:</span>
+							<span x-text="results.conditions.paiement"></span>
+						</div>
+						<div class="flex" x-show="results.conditions.validite">
+							<span class="font-medium w-32">Validité:</span>
+							<span x-text="results.conditions.validite"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			
             <!-- Images des tableaux -->
             <div x-show="results.images && results.images.length > 0" class="mt-8 border-t pt-8">
                 <h3 class="text-lg font-semibold mb-4">Images des tableaux</h3>
